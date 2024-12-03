@@ -2,7 +2,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-st.title("Palmer's Penguins")
+st.title("Rebecca's Penguins")
 st.markdown("Use this Streamlit app to make your own scatterplot about penguins!")
 
 penguins_df = pd.read_csv('penguins.csv')
