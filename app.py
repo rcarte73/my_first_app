@@ -1,38 +1,72 @@
-import altair as alt
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 
-st.title("UNCC's Penguins")
-st.markdown("Use this Streamlit app to make your own scatterplot about penguins!")
+# Set up page configuration
+st.set_page_config(page_title="Trafficking Dashboard", page_icon="icon.png", layout="wide")
 
-penguins_df = pd.read_csv('penguins.csv')
+# Sidebar navigation
+st.sidebar.image("icon.png", use_column_width=True)
+tabs = ["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"]
+selected_tab = st.sidebar.radio("Navigation", tabs)
 
-features = penguins_df.select_dtypes(include=["number"]).columns.tolist()
-features = [col for col in features if col not in ["year","rowid"]]
+# Preserve user selections across pages
+if "date_range" not in st.session_state:
+    st.session_state["date_range"] = None
+if "selected_country" not in st.session_state:
+    st.session_state["selected_country"] = None
 
-selected_x_var = st.selectbox(
-    "What do you want the x variable to be?",
-    features,
-)
-selected_y_var = st.selectbox(
-    "What about the y?",
-    features,
-)
+if selected_tab == "Overview":
+    # Overview Page
+    st.title("Overview")
 
-# penguin_file = st.file_uploader("Select Your Local Penguins CSV")
-# if penguin_file is not None:
-#    penguins_df = pd.read_csv(penguin_file)
-# else:
-#    st.stop()
+    # Row 1: Description columns
+    col1, col2 = st.columns(2)
+    with col1:
+        st.subheader("Sex Trafficking")
+        st.write("Description goes here for Sex Trafficking.")  # Replace with your description
+        st.button("Learn More", on_click=lambda: st.write("Navigate to your URL"))  # Replace with actual action
 
-alt_chart = (
-    alt.Chart(penguins_df, title="Scatterplot of Palmer's Penguins")
-    .mark_circle()
-    .encode(
-        x=alt.X(selected_x_var, scale=alt.Scale(zero=False)),
-        y=alt.Y(selected_y_var, scale=alt.Scale(zero=False)),
-        color="species",
-    )
-    .interactive()
-)
-st.altair_chart(alt_chart, use_container_width=True)
+    with col2:
+        st.subheader("Labor Trafficking")
+        st.write("Description goes here for Labor Trafficking.")  # Replace with your description
+        st.button("Learn More", on_click=lambda: st.write("Navigate to your URL"))  # Replace with actual action
+
+    # Row 2: Interactive map and controls
+    st.markdown("### Detected Trafficking Victims")
+    map_col, controls_col = st.columns([4, 1])
+
+    with map_col:
+        st.write("Map Visualization Here (Placeholder)")  # Replace with actual map logic
+    
+    with controls_col:
+        # Date range slider
+        date_range = st.slider(
+            "Select Date Range", 
+            min_value=2000, 
+            max_value=2021, 
+            value=(2005, 2015), 
+            step=1
+        )
+        st.session_state["date_range"] = date_range
+        
+        # Country dropdown
+        country_list = ["All Countries", "USA", "Canada", "UK"]  # Replace with actual list from data
+        selected_country = st.selectbox("Select a Country", country_list)
+        st.session_state["selected_country"] = selected_country
+        
+        # Legend placeholder
+        st.write("Legend: Placeholder for legend details.")
+        
+        # Bar chart for top 5 countries
+        st.write("Bar Chart Placeholder")  # Replace with actual bar chart logic
+
+elif selected_tab == "Trafficking Over Time":
+    # Page 2 Placeholder
+    st.title("Trafficking Over Time")
+    st.write("Content for this page will go here.")
+
+elif selected_tab == "Conviction and Prosecution Rates":
+    # Page 3 Placeholder
+    st.title("Conviction and Prosecution Rates")
+    st.write("Content for this page will go here.")
