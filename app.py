@@ -5,32 +5,103 @@ import plotly.express as px
 # Set up page configuration
 st.set_page_config(page_title="Trafficking Dashboard", page_icon="icon.png", layout="wide")
 
-# Sidebar navigation
-st.sidebar.image("icon.png", use_column_width=True)
+# Define styles for top navigation
+st.markdown(
+    """
+    <style>
+        .tab-container {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: #f0f0f0;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            color: #000;
+            text-decoration: none;
+        }
+        .tab.active {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .tab:hover {
+            background-color: #ddd;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Top Navigation Tabs
 tabs = ["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"]
-selected_tab = st.sidebar.radio("Navigation", tabs)
+tab_urls = ["#Overview", "#TraffickingOverTime", "#ConvictionAndProsecutionRates"]
 
-# Preserve user selections across pages
-if "date_range" not in st.session_state:
-    st.session_state["date_range"] = None
-if "selected_country" not in st.session_state:
-    st.session_state["selected_country"] = None
+# Set default active tab
+if "active_tab" not in st.session_state:
+    st.session_state["active_tab"] = "Overview"
 
-if selected_tab == "Overview":
+# Tab container
+st.markdown('<div class="tab-container">', unsafe_allow_html=True)
+for i, tab in enumerate(tabs):
+    active_class = "active" if st.session_state["active_tab"] == tab else ""
+    st.markdown(
+        f'<a class="tab {active_class}" href="{tab_urls[i]}" onclick="window.location.hash=\'{tabs[i]}\'">{tab}</a>',
+        unsafe_allow_html=True
+    )
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Track active tab
+query_params = st.experimental_get_query_params()
+if "Overview" in query_params:
+    st.session_state["active_tab"] = "Overview"
+elif "TraffickingOverTime" in query_params:
+    st.session_state["active_tab"] = "Trafficking Over Time"
+elif "ConvictionAndProsecutionRates" in query_params:
+    st.session_state["active_tab"] = "Conviction and Prosecution Rates"
+
+# Render content based on active tab
+if st.session_state["active_tab"] == "Overview":
     # Overview Page
     st.title("Overview")
 
     # Row 1: Description columns
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("Sex Trafficking")
-        st.write("Description goes here for Sex Trafficking.")  # Replace with your description
-        st.button("Learn More", on_click=lambda: st.write("Navigate to your URL"))  # Replace with actual action
+        st.markdown(
+            """
+            <div style="font-family: 'Sans';">
+                <h3 style="color: navy; font-weight: 600;">Sex Trafficking</h3>
+                <p style="color: black; font-weight: 300;">
+                    Sex trafficking is the crime of using force, fraud or coercion to induce another individual to sell sex. 
+                    Common types include escort services, pornography, illicit massage businesses, brothels, and outdoor solicitation.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("Learn More (Sex Trafficking)"):
+            st.write("[Visit Polaris Project](https://polarisproject.org/sex-trafficking/)")
 
     with col2:
-        st.subheader("Labor Trafficking")
-        st.write("Description goes here for Labor Trafficking.")  # Replace with your description
-        st.button("Learn More", on_click=lambda: st.write("Navigate to your URL"))  # Replace with actual action
+        st.markdown(
+            """
+            <div style="font-family: 'Sans';">
+                <h3 style="color: navy; font-weight: 600;">Labor Trafficking</h3>
+                <p style="color: black; font-weight: 300;">
+                    Labor trafficking is the crime of using force, fraud or coercion to induce another individual to work or provide service. 
+                    Common types include agriculture, domestic work, restaurants, cleaning services, and carnivals.
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        if st.button("Learn More (Labor Trafficking)"):
+            st.write("[Visit Polaris Project](https://polarisproject.org/labor-trafficking/)")
 
     # Row 2: Interactive map and controls
     st.markdown("### Detected Trafficking Victims")
@@ -38,7 +109,7 @@ if selected_tab == "Overview":
 
     with map_col:
         st.write("Map Visualization Here (Placeholder)")  # Replace with actual map logic
-    
+
     with controls_col:
         # Date range slider
         date_range = st.slider(
@@ -61,12 +132,12 @@ if selected_tab == "Overview":
         # Bar chart for top 5 countries
         st.write("Bar Chart Placeholder")  # Replace with actual bar chart logic
 
-elif selected_tab == "Trafficking Over Time":
-    # Page 2 Placeholder
+elif st.session_state["active_tab"] == "Trafficking Over Time":
+    # Trafficking Over Time Page
     st.title("Trafficking Over Time")
     st.write("Content for this page will go here.")
 
-elif selected_tab == "Conviction and Prosecution Rates":
-    # Page 3 Placeholder
+elif st.session_state["active_tab"] == "Conviction and Prosecution Rates":
+    # Conviction and Prosecution Rates Page
     st.title("Conviction and Prosecution Rates")
     st.write("Content for this page will go here.")
