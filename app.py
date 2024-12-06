@@ -147,28 +147,6 @@ if selected_tab == "Overview":
         if "All Countries" not in selected_countries:
             filtered_data = filtered_data[filtered_data["Country"].isin(selected_countries)]
 
-        # Legend
-        st.write("**Map Legend**")
-        st.write("Lighter colors (light orange) indicate fewer victims, darker colors (dark red) indicate more victims.")
-
-        # Bar chart: Top 5 countries with the highest average victims
-        st.write("**Top 5 Countries with Highest Average Detected Victims**")
-        avg_data = (
-            filtered_data.groupby("Country", as_index=False)["txtVALUE"]
-            .mean()
-            .sort_values(by="txtVALUE", ascending=False)
-            .head(5)
-        )
-        bar_chart = px.bar(
-            avg_data,
-            x="Country",
-            y="txtVALUE",
-            labels={"txtVALUE": "Average Victims", "Country": "Country"},
-            title="Top 5 Countries",
-            color_discrete_sequence=["navy"]  # Set bar color to navy
-        )
-        st.plotly_chart(bar_chart, use_container_width=True)
-
     with map_col:
         # Prepare filtered data for the map
         map_data = filtered_data.groupby('Country', as_index=False)['txtVALUE'].sum()
@@ -177,13 +155,12 @@ if selected_tab == "Overview":
             locations="Country",
             locationmode="country names",
             color="txtVALUE",
-            color_continuous_scale=[
-                "lightorange", "orangered", "darkred"  # Gradient light orange to dark red
-            ],
+            color_continuous_scale="oranges",  # Use the predefined 'oranges' colorscale
             labels={"txtVALUE": "Victims"}
         )
+        # Explicitly remove all title-related properties
         fig.update_layout(
             geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
-            title=None  # Remove the "undefined" title
+            title=dict(text=None)  # Ensure no title text is displayed
         )
         st.plotly_chart(fig, use_container_width=True)
