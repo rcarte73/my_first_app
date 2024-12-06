@@ -24,28 +24,63 @@ st.markdown(
             color: navy !important;
             font-family: 'Sans', sans-serif !important;
         }
+
+        /* Styling for navigation items */
+        .nav-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .nav-item img {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .nav-item label {
+            font-family: 'Sans', sans-serif;
+            font-size: 16px;
+            color: navy;
+        }
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# Sidebar navigation
+# Sidebar logo
 st.sidebar.image("icon.png", use_container_width=True)
-tabs = ["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"]
-selected_tab = st.sidebar.radio("Navigation", tabs)
 
-# Preserve user selections across pages
-if "date_range" not in st.session_state:
-    st.session_state["date_range"] = None
-if "selected_country" not in st.session_state:
-    st.session_state["selected_country"] = None
+# Define navigation items with their icons
+nav_items = {
+    "Overview": "overview.png",
+    "Trafficking Over Time": "trend.png",
+    "Conviction and Prosecution Rates": "conviction.png",
+}
+
+# Sidebar radio buttons with images
+st.sidebar.markdown('<div class="nav-container">', unsafe_allow_html=True)
+selected_tab = st.sidebar.radio(
+    "",
+    options=list(nav_items.keys()),
+    format_func=lambda option: f"{option}",
+)
+
+# Load the data
+file_path = "data_glotip.xlsx"  # Ensure this is the correct path to your data file
+data = pd.read_excel(file_path, sheet_name="data_glotip_1")
+
+# Prepare data for the map
+df_map = data[data['txtVALUE'].notna()]  # Filter out rows with missing values
+df_map['txtVALUE'] = pd.to_numeric(df_map['txtVALUE'], errors='coerce')  # Ensure numeric values
+df_map = df_map.groupby('Country', as_index=False)['txtVALUE'].sum()  # Aggregate by country
 
 # Content rendering based on selected tab
 if selected_tab == "Overview":
     # Overview Page
-
-    # Display the header image using st.image
-    st.image("header.jpg", use_column_width=True)
+    st.image("header.jpg", use_container_width=True)
+    st.title("Overview Content")
+    st.write("This is the Overview page.")
 
     # Row 1: Description columns
     col1, col2 = st.columns(2)
@@ -117,39 +152,28 @@ if selected_tab == "Overview":
     )
     st.markdown('<div class="section-title">Detected Trafficking Victims</div>', unsafe_allow_html=True)
 
-    map_col, controls_col = st.columns([4, 1])  # 80/20 split
-
-    with map_col:
-        st.write("Map Visualization Here (Placeholder)")  # Replace with actual map logic
-
-    with controls_col:
-        # Date range slider
-        date_range = st.slider(
-            "Select Date Range",
-            min_value=2000,
-            max_value=2021,
-            value=(2005, 2015),
-            step=1
-        )
-        st.session_state["date_range"] = date_range
-
-        # Country dropdown
-        country_list = ["All Countries", "USA", "Canada", "UK"]  # Replace with actual list from data
-        selected_country = st.selectbox("Select a Country", country_list)
-        st.session_state["selected_country"] = selected_country
-
-        # Legend placeholder
-        st.markdown("**Legend:**")
-        st.write("Placeholder for legend details.")  # Replace with actual legend logic
-
-        # Bar chart for top 5 countries
-        st.markdown("### Top 5 Countries")
-        st.write("Bar Chart Placeholder")  # Replace with actual bar chart logic
+    # Add the map visualization
+    fig = px.choropleth(
+        df_map,
+        locations="Country",
+        locationmode="country names",
+        color="txtVALUE",
+        title="Detected Trafficking Victims by Country",
+        color_continuous_scale="Viridis",
+        labels={"txtVALUE": "Victims"}
+    )
+    fig.update_layout(
+        geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
+        title_x=0.5
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 elif selected_tab == "Trafficking Over Time":
-    st.title("Trafficking Over Time")
-    st.write("Content for this page will go here.")
+    # Trafficking Over Time Page
+    st.title("Trafficking Over Time Content")
+    st.write("This is the Trafficking Over Time page.")
 
 elif selected_tab == "Conviction and Prosecution Rates":
-    st.title("Conviction and Prosecution Rates")
-    st.write("Content for this page will go here.")
+    # Conviction and Prosecution Rates Page
+    st.title("Conviction and Prosecution Rates Content")
+    st.write("This is the Conviction and Prosecution Rates page.")
