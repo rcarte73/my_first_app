@@ -24,25 +24,6 @@ st.markdown(
             color: navy !important;
             font-family: 'Sans', sans-serif !important;
         }
-
-        /* Styling for navigation items */
-        .nav-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .nav-item img {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-        }
-
-        .nav-item label {
-            font-family: 'Sans', sans-serif;
-            font-size: 16px;
-            color: navy;
-        }
     </style>
     """,
     unsafe_allow_html=True
@@ -51,19 +32,10 @@ st.markdown(
 # Sidebar logo
 st.sidebar.image("icon.png", use_container_width=True)
 
-# Define navigation items with their icons
-nav_items = {
-    "Overview": "overview.png",
-    "Trafficking Over Time": "trend.png",
-    "Conviction and Prosecution Rates": "conviction.png",
-}
-
-# Sidebar radio buttons with images
-st.sidebar.markdown('<div class="nav-container">', unsafe_allow_html=True)
+# Sidebar radio buttons
 selected_tab = st.sidebar.radio(
     "",
-    options=list(nav_items.keys()),
-    format_func=lambda option: f"{option}",
+    options=["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"],
 )
 
 # Load the data
@@ -71,16 +43,12 @@ file_path = "data_glotip.xlsx"  # Ensure this is the correct path to your data f
 data = pd.read_excel(file_path, sheet_name="data_glotip_1")
 
 # Prepare data for the map
-df_map = data[data['txtVALUE'].notna()]  # Filter out rows with missing values
-df_map['txtVALUE'] = pd.to_numeric(df_map['txtVALUE'], errors='coerce')  # Ensure numeric values
-df_map = df_map.groupby('Country', as_index=False)['txtVALUE'].sum()  # Aggregate by country
+data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')  # Ensure numeric values
 
 # Content rendering based on selected tab
 if selected_tab == "Overview":
     # Overview Page
     st.image("header.jpg", use_container_width=True)
-    st.title("Overview Content")
-    st.write("This is the Overview page.")
 
     # Row 1: Description columns
     col1, col2 = st.columns(2)
@@ -152,28 +120,70 @@ if selected_tab == "Overview":
     )
     st.markdown('<div class="section-title">Detected Trafficking Victims</div>', unsafe_allow_html=True)
 
-    # Add the map visualization
-    fig = px.choropleth(
-        df_map,
-        locations="Country",
-        locationmode="country names",
-        color="txtVALUE",
-        title="Detected Trafficking Victims by Country",
-        color_continuous_scale="Viridis",
-        labels={"txtVALUE": "Victims"}
-    )
-    fig.update_layout(
-        geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
-        title_x=0.5
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    # Interactive controls for the map
+    map_col, controls_col = st.columns([4, 1])
 
-elif selected_tab == "Trafficking Over Time":
-    # Trafficking Over Time Page
-    st.title("Trafficking Over Time Content")
-    st.write("This is the Trafficking Over Time page.")
+    with controls_col:
+        # Date range slider
+        min_year, max_year = int(data['Year'].min()), int(data['Year'].max())
+        date_range = st.slider(
+            "Select Date Range",
+            min_value=min_year,
+            max_value=max_year,
+            value=(min_year, max_year),
+            step=1
+        )
 
-elif selected_tab == "Conviction and Prosecution Rates":
-    # Conviction and Prosecution Rates Page
-    st.title("Conviction and Prosecution Rates Content")
-    st.write("This is the Conviction and Prosecution Rates page.")
+        # Country dropdown
+        country_list = ["All Countries"] + sorted(data["Country"].dropna().unique())
+        selected_countries = st.multiselect(
+            "Select Country/Countries",
+            options=country_list,
+            default="All Countries"
+        )
+
+        # Filter data by date range and selected countries
+        filtered_data = data[(data['Year'] >= date_range[0]) & (data['Year'] <= date_range[1])]
+        if "All Countries" not in selected_countries:
+            filtered_data = filtered_data[filtered_data["Country"].isin(selected_countries)]
+
+        # Legend
+        st.write("**Map Legend**")
+        st.write("Lighter colors (light orange) indicate fewer victims, darker colors (dark red) indicate more victims.")
+
+        # Bar chart: Top 5 countries with the highest average victims
+        st.write("**Top 5 Countries with Highest Average Detected Victims**")
+        avg_data = (
+            filtered_data.groupby("Country", as_index=False)["txtVALUE"]
+            .mean()
+            .sort_values(by="txtVALUE", ascending=False)
+            .head(5)
+        )
+        bar_chart = px.bar(
+            avg_data,
+            x="Country",
+            y="txtVALUE",
+            labels={"txtVALUE": "Average Victims", "Country": "Country"},
+            title="Top 5 Countries",
+            color_discrete_sequence=["navy"]  # Set bar color to navy
+        )
+        st.plotly_chart(bar_chart, use_container_width=True)
+
+    with map_col:
+        # Prepare filtered data for the map
+        map_data = filtered_data.groupby('Country', as_index=False)['txtVALUE'].sum()
+        fig = px.choropleth(
+            map_data,
+            locations="Country",
+            locationmode="country names",
+            color="txtVALUE",
+            color_continuous_scale=[
+                "lightorange", "orangered", "darkred"  # Gradient light orange to dark red
+            ],
+            labels={"txtVALUE": "Victims"}
+        )
+        fig.update_layout(
+            geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
+            title=None  # Remove the "undefined" title
+        )
+        st.plotly_chart(fig, use_container_width=True)
