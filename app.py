@@ -146,7 +146,7 @@ if selected_tab == "Overview":
         filtered_data = data[(data['Year'] >= date_range[0]) & (data['Year'] <= date_range[1])]
         if "All Countries" not in selected_countries:
             filtered_data = filtered_data[filtered_data["Country"].isin(selected_countries)]
-
+            
     with map_col:
         # Prepare filtered data for the map
         map_data = filtered_data.groupby('Country', as_index=False)['txtVALUE'].sum()
@@ -158,9 +158,8 @@ if selected_tab == "Overview":
             color_continuous_scale="oranges",  # Use the predefined 'oranges' colorscale
             labels={"txtVALUE": "Victims"}
         )
-        # Explicitly remove all title-related properties
         fig.update_layout(
             geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
-            title=dict(text=None)  # Ensure no title text is displayed
+            title=None  # Remove the "undefined" title
         )
         st.plotly_chart(fig, use_container_width=True)
