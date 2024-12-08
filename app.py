@@ -163,3 +163,68 @@ if selected_tab == "Overview":
             title=None  # Remove the "undefined" title
         )
         st.plotly_chart(fig, use_container_width=True)
+
+elif selected_tab == "Trafficking Over Time":
+    # Header image
+    st.image("header2.jpg", use_container_width=True)
+
+    st.title("Trafficking Over Time: United States")
+
+    # Filter data for the United States
+    us_data = data[data["Country"] == "United States"]
+
+    # Metrics Section
+    total_victims = us_data['txtVALUE'].sum()
+    total_by_gender = us_data.groupby('Sex')['txtVALUE'].sum()
+    total_by_age = us_data.groupby('Age')['txtVALUE'].sum()
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Victims", f"{total_victims:,}")
+    with col2:
+        st.metric("Victims by Gender", ", ".join([f"{k}: {v:,}" for k, v in total_by_gender.items()]))
+    with col3:
+        st.metric("Victims by Age", ", ".join([f"{k}: {v:,}" for k, v in total_by_age.items()]))
+
+    # Tabs for analysis
+    tab = st.radio("Analysis Type", ["By Gender", "By Age Group"])
+
+    # Year slider
+    min_year, max_year = int(us_data['Year'].min()), int(us_data['Year'].max())
+    selected_years = st.slider(
+        "Select Year Range",
+        min_value=min_year,
+        max_value=max_year,
+        value=(min_year, max_year),
+        step=1
+    )
+
+    # Filter data by selected years
+    filtered_data = us_data[(us_data['Year'] >= selected_years[0]) & (us_data['Year'] <= selected_years[1])]
+
+    # Visualization
+    if tab == "By Gender":
+        # Group data by gender and year
+        gender_data = filtered_data[filtered_data['Sex'].notna()].groupby(['Year', 'Sex'], as_index=False)['txtVALUE'].sum()
+        fig = px.line(
+            gender_data,
+            x="Year",
+            y="txtVALUE",
+            color="Sex",
+            labels={"txtVALUE": "Victims", "Sex": "Gender"},
+            title="Trafficking Trends by Gender in the US"
+        )
+    else:
+        # Group data by age and year
+        age_data = filtered_data[filtered_data['Age'].notna()].groupby(['Year', 'Age'], as_index=False)['txtVALUE'].sum()
+        fig = px.line(
+            age_data,
+            x="Year",
+            y="txtVALUE",
+            color="Age",
+            labels={"txtVALUE": "Victims", "Age": "Age Group"},
+            title="Trafficking Trends by Age Group in the US"
+        )
+
+    # Display the chart
+    st.plotly_chart(fig, use_container_width=True)
