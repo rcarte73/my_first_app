@@ -447,9 +447,13 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     text-align: center;
                 }
             </style>
-            <div class="traffickers-title">Traffickers</div>
+            <div class="traffickers-title">Who are the traffickers?</div>
             <div class="traffickers-body">
-                Content for Traffickers goes here.
+                Perpetrators of human trafficking span all racial, ethnic, and gender demographics and are as diverse as survivors. 
+                Some use their privilege, wealth, and power as a means of control while others experience the same socio-economic 
+                oppression as their victims. They include individuals, business owners, members of a gang or network, parents or 
+                family members of victims, intimate partners, owners of farms or restaurants, and powerful corporate executives 
+                and government representatives.
             </div>
             """,
             unsafe_allow_html=True
@@ -474,11 +478,36 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     font-weight: 300;
                     color: black;
                     text-align: center;
+                    margin-bottom: 20px;
+                }
+                .button-learn-more {
+                    background-color: #f0f0f0;
+                    color: black;
+                    padding: 10px 15px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    font-family: 'Sans', sans-serif;
+                    border: 1px solid navy;
+                    cursor: pointer;
+                    margin: 0 auto; /* Center the button */
+                }
+                .button-learn-more:hover {
+                    background-color: navy;
+                    color: white;
                 }
             </style>
-            <div class="control-title">Control</div>
+            <div class="control-title">How do traffickers control victims?</div>
             <div class="control-body">
-                Content for Control goes here.
+                Traffickers employ a variety of control tactics, the most common include physical and emotional abuse and threats, 
+                isolation from friends and family, and economic abuse. They make promises aimed at addressing the needs of their 
+                target in order to impose control. As a result, victims become trapped and fear leaving for myriad reasons, 
+                including psychological trauma, shame, emotional attachment, or physical threats to themselves or their family.
+            </div>
+            <div style="text-align: center;">
+                <a href="https://polarisproject.org/understanding-human-trafficking/" target="_blank" class="button-learn-more">Learn More</a>
             </div>
             """,
             unsafe_allow_html=True
@@ -503,11 +532,34 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     font-weight: 300;
                     color: black;
                     text-align: center;
+                    margin-bottom: 20px;
+                }
+                .button-learn-more {
+                    background-color: #f0f0f0;
+                    color: black;
+                    padding: 10px 15px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    font-family: 'Sans', sans-serif;
+                    border: 1px solid navy;
+                    cursor: pointer;
+                    margin: 0 auto; /* Center the button */
+                }
+                .button-learn-more:hover {
+                    background-color: navy;
+                    color: white;
                 }
             </style>
-            <div class="survivors-title">Survivors</div>
+            <div class="survivors-title">Who are the survivors?</div>
             <div class="survivors-body">
-                Content for Survivors goes here.
+                Victims and survivors of human trafficking represent every race and ethnicity but some forms of trafficking 
+                are more likely to affect specific ethnic groups.
+            </div>
+            <div style="text-align: center;">
+                <a href="https://polarisproject.org/our-approach/" target="_blank" class="button-learn-more">Learn More</a>
             </div>
             """,
             unsafe_allow_html=True
