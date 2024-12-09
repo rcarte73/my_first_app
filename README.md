@@ -10,7 +10,9 @@ This project presents a comprehensive streamlit app dashboard analyzing human tr
 
 ### Key Visualizations
 **Global and Regional Trends** A map with gradient colors to represent the intensity of trafficking incidents by country. This layered approach allows users to quickly identify high-incidence areas both visually and quantitatively.
+
 **Gender and Age Distributions** 3 dynamnic KPIs for Total detected victims, detected victims identified by gender, and detected victims identified by age in the US by year. A multi line graph offer insights into gender and age demographics of trafficking victims over a year range, using the toggle and slider, providing an interactive exploration of vulnerable populations over time.
+
 **Prosecution and Conviction Rates** A combined bar chart and line graph show convicted versus prosecuted cases over time. The bar chart represents prosecutions, while the line overlays convictions, along with a dynamic KPI for the average conviction rate over the given year range, allowing for an intuitive comparison of legal outcomes and the progression from prosecution to conviction.
 
 These visualizations collectively provide a clear abstraction of the trafficking process, from detection to legal outcomes. Calculated fields, such as conviction rates and demographic totals, ensure consistent aggregation across years, countries, and categories, while interactive filters and calculated fields support dynamic comparisons across multiple dimensions.
