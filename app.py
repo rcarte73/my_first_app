@@ -710,7 +710,8 @@ elif selected_tab == "Conviction and Prosecution Rates":
 
         # Update layout to remove undefined title
         fig.update_layout(
-            title=None,  # Ensure no title is defined
+            title_text=None,
+            title=None, 
             yaxis=dict(title="Number of People"),
             xaxis=dict(title="Year"),
             showlegend=True,
