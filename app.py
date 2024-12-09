@@ -2,9 +2,42 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import streamlit_shadcn_ui as ui
+from PIL import Image
+import os
+import base64
 
 # Set up page configuration
-st.set_page_config(page_title="Trafficking Dashboard", page_icon="icon.png", layout="wide")
+st.set_page_config(page_title="Trafficking Dashboard", page_icon="images/icon.png", layout="wide")
+
+def display_header_image(image_filename):
+    """
+    Displays a header image as a responsive full-width image.
+
+    Args:
+        image_filename (str): The relative path to the image file.
+    """
+    # Get the full path to the image
+    image_path = os.path.join(os.path.dirname(__file__), image_filename)
+
+    # Check if the image file exists
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
+
+        st.markdown(
+            f"""
+            <style>
+            .full-width-image {{
+                width: 100%;
+                height: auto;
+            }}
+            </style>
+            <img class="full-width-image" src="data:image/jpg;base64,{encoded_string}">
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.error(f"Image file not found: {image_filename}")
 
 # Sidebar and page styling
 st.markdown(
@@ -31,7 +64,9 @@ st.markdown(
 )
 
 # Sidebar logo
-st.sidebar.image("icon.png", use_container_width=True)
+image = Image.open("images/icon.png")
+resized_image = image.resize((632, 118))  # Replace with your dimensions
+st.sidebar.image(resized_image)
 
 # Sidebar radio buttons
 selected_tab = st.sidebar.radio(
@@ -50,7 +85,7 @@ if "analysis_type" not in st.session_state:
     st.session_state["analysis_type"] = "By Gender"
 
 # Load the data
-file_path = "data_glotip.xlsx" 
+file_path = "data/data_glotip.xlsx" 
 data = pd.read_excel(file_path, sheet_name="data_glotip_1")
 
 # Ensure txtVALUE is numeric and replace "<5" with 2
@@ -59,8 +94,8 @@ data.loc[data['txtVALUE'] < 5, 'txtVALUE'] = 2
 
 # Content rendering based on selected tab
 if selected_tab == "Overview":
-    # Overview Page
-    st.image("header.jpg", use_container_width=True)
+    # Header image
+    display_header_image("images/header.jpg")
 
     # Row 1: Description columns
     col1, col2 = st.columns(2)
@@ -184,7 +219,7 @@ if selected_tab == "Overview":
 
 elif selected_tab == "Trafficking Over Time":
     # Header image
-    st.image("header2.jpg", use_container_width=True)
+    display_header_image("images/header2.jpg")
 
     # Filter data
     data["Country"] = data["Country"].str.strip().str.title()
@@ -367,7 +402,8 @@ elif selected_tab == "Trafficking Over Time":
         st.plotly_chart(fig, use_container_width=True)
 elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
-    st.image("header3.jpg", use_container_width=True)
+    display_header_image("images/header3.jpg")
+
 
     # Page layout: # 1: Blank margin, 6: Content area, 1: Blank margin
     left_margin, content_area, right_margin = st.columns([1, 6, 1])
