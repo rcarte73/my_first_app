@@ -350,32 +350,23 @@ elif selected_tab == "Conviction and Prosecution Rates":
     # Normalize the Country column
     data["Country"] = data["Country"].str.strip().str.title()  # Ensure consistent formatting
 
-    # Filter data for the United States
-    us_data = data[data["Country"] == "United States Of America"]
+    # Filter data for the United States and from 2007 onwards
+    us_data = data[(data["Country"] == "United States Of America") & (data["Year"] >= 2007)]
 
     if us_data.empty:
-        st.warning("No data available for the United States of America in the selected dataset.")
-        st.write("Preview of Available Data:", data.head())  # Display data for debugging
+        st.warning("No data available for the United States of America from 2007 onwards in the selected dataset.")
     else:
         # Clean the Year column
         us_data = us_data.dropna(subset=["Year"])  # Drop rows with NaN in Year
         us_data["Year"] = pd.to_numeric(us_data["Year"], errors="coerce")  # Ensure Year is numeric
         us_data = us_data.dropna(subset=["Year"])  # Drop rows with invalid years
 
-        # Debugging Step: Check distinct values in Indicator
-        unique_indicators = us_data["Indicator"].unique()
-        st.write("Unique Indicators in U.S. Data:", unique_indicators)  # Confirm relevant values are present
-
         # Filter for Prosecutions and Convictions
         prosecution_data = us_data[us_data["Indicator"] == "Persons prosecuted"]
         conviction_data = us_data[us_data["Indicator"] == "Persons convicted"]
 
-        # Debugging Step: Display filtered data
-        st.write("Prosecution Data Preview:", prosecution_data.head())
-        st.write("Conviction Data Preview:", conviction_data.head())
-
         # Year slider
-        min_year, max_year = int(us_data['Year'].min()), int(us_data['Year'].max())
+        min_year, max_year = 2007, int(us_data['Year'].max())  # Start from 2007
         selected_years = st.slider(
             "Select Year Range",
             min_value=min_year,
@@ -392,10 +383,6 @@ elif selected_tab == "Conviction and Prosecution Rates":
             (conviction_data['Year'] >= selected_years[0]) & (conviction_data['Year'] <= selected_years[1])
         ]
 
-        # Debugging Step: Check filtered data
-        st.write("Filtered Prosecution Data:", filtered_prosecution_data)
-        st.write("Filtered Conviction Data:", filtered_conviction_data)
-
         # Merge the data for visualization
         combined_data = pd.merge(
             filtered_prosecution_data[["Year", "txtVALUE"]].rename(columns={"txtVALUE": "Prosecutions"}),
@@ -409,9 +396,6 @@ elif selected_tab == "Conviction and Prosecution Rates":
             combined_data["Convictions"] / combined_data["Prosecutions"]
         ) * 100
         combined_data["Conviction Rate (%)"] = combined_data["Conviction Rate (%)"].fillna(0)
-
-        # Debugging Step: Preview combined data
-        st.write("Combined Data for Chart:", combined_data)
 
         # Dynamic page title with year range
         st.markdown(
