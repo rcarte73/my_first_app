@@ -234,14 +234,18 @@ elif selected_tab == "Trafficking Over Time":
         us_data = us_data.dropna(subset=["Year"])
 
         # Year slider
-        min_year, max_year = us_data["Year"].min(), us_data["Year"].max()
+        if "trafficking_years" not in st.session_state:
+            st.session_state["trafficking_years"] = (2007, 2020)
+
         selected_years = st.slider(
             "Select Year Range",
             min_value=int(min_year),
             max_value=int(max_year),
-            value=st.session_state["selected_years"]
+            value=st.session_state["trafficking_years"],
+            key="trafficking_year_slider"  # Unique key for this slider
         )
-        st.session_state["selected_years"] = selected_years
+        st.session_state["trafficking_years"] = selected_years
+
 
         # Filter data by selected years
         filtered_data = us_data[
@@ -561,14 +565,18 @@ elif selected_tab == "Conviction and Prosecution Rates":
         combined_data["Difference"] = combined_data["Prosecutions"] - combined_data["Convictions"]
 
         # Year slider with session state
-        min_year, max_year = int(combined_data["Year"].min()), int(combined_data["Year"].max())
+        if "conviction_years" not in st.session_state:
+            st.session_state["conviction_years"] = (min_year, max_year)  # Default range for conviction data
+
         selected_years = st.slider(
             "Select Year Range",
             min_value=min_year,
             max_value=max_year,
-            value=st.session_state.get("selected_years", (min_year, max_year)),
+            value=st.session_state["conviction_years"],
+            key="conviction_year_slider"  # Unique key for this slider
         )
-        st.session_state["selected_years"] = selected_years
+        st.session_state["conviction_years"] = selected_years
+
 
         # Filter data by selected years
         filtered_data = combined_data[
