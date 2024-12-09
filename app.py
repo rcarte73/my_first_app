@@ -66,7 +66,7 @@ st.markdown(
 
 # Sidebar logo
 image = Image.open("images/icon.png")
-resized_image = image.resize((632, 118))  # Replace with your dimensions
+resized_image = image.resize((632, 118))
 st.sidebar.image(resized_image)
 
 # Sidebar radio buttons
@@ -85,9 +85,30 @@ if "selected_years" not in st.session_state:
 if "analysis_type" not in st.session_state:
     st.session_state["analysis_type"] = "By Gender"
 
-# Load the data
-file_path = "data/data_glotip.xlsx" 
-data = pd.read_excel(file_path, sheet_name="data_glotip_1")
+@st.cache_data
+def load_data(file_path, sheet_name="data_glotip_1"):
+    """
+    Loads data from an Excel file with caching for improved performance.
+
+    Args:
+        file_path (str): Path to the Excel file.
+        sheet_name (str): The sheet name to load data from. Defaults to "data_glotip_1".
+
+    Returns:
+        pd.DataFrame: Loaded data as a pandas DataFrame.
+    """
+    # Load the data
+    data = pd.read_excel(file_path, sheet_name=sheet_name)
+
+    # Ensure txtVALUE is numeric and replace "<5" with 2
+    data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')
+    data.loc[data['txtVALUE'] < 5, 'txtVALUE'] = 2
+
+    return data
+
+# Load the data using the cached function
+file_path = "data/data_glotip.xlsx"
+data = load_data(file_path)
 
 # Ensure txtVALUE is numeric and replace "<5" with 2
 data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')
