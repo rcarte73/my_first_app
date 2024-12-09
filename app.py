@@ -637,6 +637,9 @@ elif selected_tab == "Conviction and Prosecution Rates":
             color_discrete_sequence=["#1f77b4"],
         )
 
+        # Rename the bar trace to explicitly set the legend entry
+        fig.update_traces(name="Prosecutions", selector=dict(type="bar"))
+
         # Add convictions as a line chart
         fig.add_scatter(
             x=filtered_data["Year"],
@@ -653,7 +656,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
             fig.add_annotation(
                 x=filtered_data.iloc[i]["Year"],
                 y=filtered_data.iloc[i]["Prosecutions"] + 10,
-                text=f"{difference:+}", 
+                text=f"{difference:+}",
                 showarrow=False,
                 font=dict(color=color, size=14, family="Arial Black"),
             )
@@ -671,9 +674,6 @@ elif selected_tab == "Conviction and Prosecution Rates":
                 x=1,
             ),
         )
-
-        # Add prosecutions to the legend
-        fig.update_traces(name="Prosecutions", selector=dict(type="bar"))
 
         # Display the chart
         st.plotly_chart(fig, use_container_width=True)
