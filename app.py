@@ -413,18 +413,34 @@ elif selected_tab == "Trafficking Over Time":
                 ~line_filtered_data["Sex"].isin(["Other", "Unknown"])
             ].groupby(["Year", "Sex"], as_index=False)["txtVALUE"].sum()
 
+            # Define the color mapping to ensure "All victims" is red
+            color_map = {
+                "All victims": "red",
+                "Female": "blue",
+                "Male": "green"
+            }
+
             fig = px.line(
                 gender_data,
                 x="Year",
                 y="txtVALUE",
                 color="Sex",
                 labels={"txtVALUE": "Victims", "Sex": "Gender"},
-                title="Trafficking Trends by Gender"
+                title="Trafficking Trends by Gender",
+                color_discrete_map=color_map
             )
+
         elif analysis_type == "By Age Group":
             age_data = line_filtered_data[
                 ~line_filtered_data["Age"].isin(["Other", "Unknown"])
             ].groupby(["Year", "Age"], as_index=False)["txtVALUE"].sum()
+
+            # Define the color mapping to ensure "All victims" is red
+            color_map = {
+                "All victims": "red",
+                "0 to 17 years": "blue",
+                "18 years or over": "green"
+            }
 
             fig = px.line(
                 age_data,
@@ -432,12 +448,14 @@ elif selected_tab == "Trafficking Over Time":
                 y="txtVALUE",
                 color="Age",
                 labels={"txtVALUE": "Victims", "Age": "Age Group"},
-                title="Trafficking Trends by Age Group"
+                title="Trafficking Trends by Age Group",
+                color_discrete_map=color_map
             )
+
 
         # Display the chart
         st.plotly_chart(fig, use_container_width=True)
-        
+
 elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
     display_header_image("images/header3.jpg")
