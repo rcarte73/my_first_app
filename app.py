@@ -21,7 +21,7 @@ st.markdown(
         }
 
         /* Sidebar text styling */
-        .css-1d391kg, .css-qbe2hs, .css-h5rgaw 
+        .css-1d391kg, .css-qbe2hs, .css-h5rgaw {
             color: navy !important;
             font-family: 'Sans', sans-serif !important;
         }
@@ -40,11 +40,11 @@ selected_tab = st.sidebar.radio(
 )
 
 # Load the data
-file_path = "data_glotip.xlsx"  # Ensure this is the correct path to your data file
+file_path = "data_glotip.xlsx" 
 data = pd.read_excel(file_path, sheet_name="data_glotip_1")
 
 # Prepare data for the map
-data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')  # Ensure numeric values
+data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')
 
 # Content rendering based on selected tab
 if selected_tab == "Overview":
@@ -156,13 +156,13 @@ if selected_tab == "Overview":
             locations="Country",
             locationmode="country names",
             color="txtVALUE",
-            color_continuous_scale="oranges",  # Use the predefined 'oranges' colorscale
+            color_continuous_scale="oranges", 
             labels={"txtVALUE": "Victims"}
         )
         fig.update_layout(
         geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
-        title_text="",  # Explicitly set to an empty string
-        title_x=0.5  # Center the title, even if empty
+        title_text="",  
+        title_x=0.5  
 )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -171,174 +171,95 @@ elif selected_tab == "Trafficking Over Time":
     # Header image
     st.image("header2.jpg", use_container_width=True)
 
-    # Filter data for the United States of America
-    data["Country"] = data["Country"].str.strip().str.title()  # Normalize Country column
-    us_data = data[data["Country"] == "United States Of America"]
+    # Page content goes here (Trafficking Over Time logic)...
 
-    if us_data.empty:
-        st.warning("No data available for the United States of America in the selected dataset.")
-    else:
-        # Clean the Year column
-        us_data = us_data.dropna(subset=["Year"])  # Drop rows with NaN in Year
-        us_data["Year"] = pd.to_numeric(us_data["Year"], errors="coerce")  # Convert safely
-        us_data = us_data.dropna(subset=["Year"])  # Drop remaining invalid rows
+elif selected_tab == "Conviction and Prosecution Rates":
+    # Header image
+    st.image("header3.jpg", use_container_width=True)
 
-        # Year slider
-        min_year, max_year = int(us_data['Year'].min()), int(us_data['Year'].max())
-        selected_years = st.slider(
-            "Select Year Range",
-            min_value=min_year,
-            max_value=max_year,
-            value=(min_year, max_year),
-            step=1,
-        )
+    # Page title
+    st.markdown(
+        """
+        <style>
+            .page-title {
+                font-family: 'Sans', sans-serif;
+                font-size: 28px;
+                font-weight: bold;
+                color: navy;
+                text-align: center;
+                margin-bottom: 20px;
+            }
+        </style>
+        <div class="page-title">Convictions and Prosecution Rates</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-        # Filter data by selected years
-        filtered_data = us_data[(us_data['Year'] >= selected_years[0]) & (us_data['Year'] <= selected_years[1])]
+    # Create tabs
+    vulnerabilities_tab, traffickers_tab, control_tab, survivors_tab = st.tabs(
+        ["Vulnerabilities", "Traffickers", "Control", "Survivors"]
+    )
 
-        # Dynamic title
-        st.markdown(
-            f"""
-            <style>
-                .page-title {{
-                    font-family: 'Sans', sans-serif;
-                    font-size: 28px;
-                    font-weight: bold;
-                    color: navy;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }}
-            </style>
-            <div class="page-title">Trafficking Over Time: U.S. ({selected_years[0]} - {selected_years[1]})</div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        # Prepare dynamic metrics
-        total_victims = int(filtered_data['txtVALUE'].sum())
-        total_by_gender = filtered_data.groupby('Sex')['txtVALUE'].sum()
-        total_by_gender = total_by_gender[["Female", "Male"]] if "Female" in total_by_gender and "Male" in total_by_gender else total_by_gender
-        total_by_age = filtered_data.groupby('Age')['txtVALUE'].sum()
-        total_by_age = {
-            "Minors": int(total_by_age.get("0 to 17 years", 0)),
-            "Adults": int(total_by_age.get("18 years or over", 0)),
-        }
-
-        metrics = [
-            {"title": "Total Victims", "content": f"{total_victims:,}", "description": "Detected victims"},
-            {
-                "title": "Victims by Gender",
-                "content": f"Female: {int(total_by_gender.get('Female', 0)):,}<br>Male: {int(total_by_gender.get('Male', 0)):,}",
-                "description": "Identified gender",
-            },
-            {
-                "title": "Victims by Age",
-                "content": f"Minors: {total_by_age['Minors']:,}<br>Adults: {total_by_age['Adults']:,}",
-                "description": "Identified age",
-            },
-        ]
-
-        # CSS for KPI boxes with drop shadow and smaller titles
+    # Tab 1: Vulnerabilities
+    with vulnerabilities_tab:
         st.markdown(
             """
             <style>
-                .kpi-container {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: space-between;
-                    height: 180px;
-                    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add subtle gray drop shadow */
-                    border-radius: 8px;
-                    padding: 10px;
-                    text-align: center;
-                    background-color: #f9f9f9;
-                }
-                .kpi-title {
-                    color: navy;
+                .vulnerability-title {
                     font-family: 'Sans', sans-serif;
-                    font-size: 18px; /* Reduced font size for smaller titles */
+                    font-size: 18px;
                     font-weight: 600;
-                }
-                .kpi-content {
-                    font-size: 20px;
-                    font-weight: bold;
-                    line-height: 1.5; /* Default size for other KPIs */
-                }
-                .kpi-content-large {
-                    font-size: 28px; /* Larger size for the first KPI value */
-                    font-weight: bold;
-                    line-height: 1.5;
-                }
-                .kpi-subtitle {
-                    font-size: 14px;
-                    color: gray;
-                }
-                .line-chart-title {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 28px;
-                    font-weight: bold;
                     color: navy;
                     text-align: center;
                     margin-bottom: 20px;
                 }
+                .vulnerability-body {
+                    font-family: 'Sans', sans-serif;
+                    font-size: 14px;
+                    font-weight: 300;
+                    color: black;
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                .button-learn-more {
+                    background-color: #f0f0f0;
+                    color: black;
+                    padding: 10px 15px;
+                    text-align: center;
+                    text-decoration: none;
+                    display: inline-block;
+                    border-radius: 5px;
+                    font-size: 16px;
+                    font-family: 'Sans', sans-serif;
+                    border: 1px solid navy;
+                    cursor: pointer;
+                    margin: 0 auto; /* Center the button */
+                }
+                .button-learn-more:hover {
+                    background-color: navy;
+                    color: white;
+                }
             </style>
+            <div class="vulnerability-title">Vulnerabilities</div>
+            <div class="vulnerability-body">
+                Certain factors increase the risk of being trafficked. These include poverty, lack of education, migration, 
+                homelessness, and lack of social safety nets. Vulnerable individuals are often targeted and exploited.
+            </div>
+            <div style="text-align: center;">
+                <a href="https://polarisproject.org/vulnerabilities" target="_blank" class="button-learn-more">Learn More</a>
+            </div>
             """,
-            unsafe_allow_html=True,
+            unsafe_allow_html=True
         )
 
-        # Render KPIs with adjusted size for the first KPI
-        columns = st.columns(3)
-        for i, metric in enumerate(metrics):
-            with columns[i]:
-                # Use larger font size for the first KPI's value
-                content_class = "kpi-content-large" if i == 0 else "kpi-content"
-                st.markdown(
-                    f"""
-                    <div class="kpi-container">
-                        <div class="kpi-title">{metric['title']}</div>
-                        <div class="{content_class}">{metric['content']}</div>
-                        <div class="kpi-subtitle">{metric['description']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+    # Tab 2: Traffickers
+    with traffickers_tab:
+        st.write("Content for Traffickers goes here.")  # Replace with actual content later
 
-        # Add vertical space after KPIs
-        st.markdown("<br><br>", unsafe_allow_html=True)  # Adds some vertical spacing
-        st.divider()  # Optional horizontal line for separation
+    # Tab 3: Control
+    with control_tab:
+        st.write("Content for Control goes here.")  # Replace with actual content later
 
-        # Use `ui.tabs` for switching between "By Gender" and "By Age Group"
-        analysis_type = ui.tabs(
-            options=["By Gender", "By Age Group"],
-            default_value="By Gender",
-            key="analysis_type"
-        )
-
-# Visualization based on selected tab
-if analysis_type == "By Gender":
-    # Filter out "Other"
-    gender_data = filtered_data[(filtered_data['Sex'].notna()) & (filtered_data['Sex'] != "Other")]
-    gender_data = gender_data.groupby(['Year', 'Sex'], as_index=False)['txtVALUE'].sum()
-    st.markdown('<div class="line-chart-title">Trafficking Trends by Gender in the U.S.</div>', unsafe_allow_html=True)
-    fig = px.line(
-        gender_data,
-        x="Year",
-        y="txtVALUE",
-        color="Sex",
-        labels={"txtVALUE": "Victims", "Sex": "Gender"},
-        color_discrete_map={"Male": "#1f77b4", "Female": "#ff7f0e"},  # Custom colors for Male and Female
-    )
-elif analysis_type == "By Age Group":
-    age_data = filtered_data[filtered_data['Age'].notna()].groupby(['Year', 'Age'], as_index=False)['txtVALUE'].sum()
-    st.markdown('<div class="line-chart-title">Trafficking Trends by Age Group in the U.S.</div>', unsafe_allow_html=True)
-    fig = px.line(
-        age_data,
-        x="Year",
-        y="txtVALUE",
-        color="Age",
-        labels={"txtVALUE": "Victims", "Age": "Age Group"},
-        color_discrete_map={"0 to 17 years": "#2ca02c", "18 years or over": "#d62728"},  # Custom colors for Age Groups
-    )
-
-# Display the chart
-st.plotly_chart(fig, use_container_width=True)
+    # Tab 4: Survivors
+    with survivors_tab:
+        st.write("Content for Survivors goes here.")  # Replace with actual content later
