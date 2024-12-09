@@ -277,9 +277,14 @@ elif selected_tab == "Trafficking Over Time":
 
 
         # Filter data by selected years
-        filtered_data = us_data[
+        line_filtered_data = us_data[
             (us_data["Year"] >= selected_years[0]) & (us_data["Year"] <= selected_years[1])
         ]
+
+        # Replace "Total" with "All victims" in the relevant columns
+        line_filtered_data["Sex"] = line_filtered_data["Sex"].replace("Total", "All victims")
+        line_filtered_data["Age"] = line_filtered_data["Age"].replace("Total", "All victims")
+
         # Dynamic title
         st.markdown(
             f"""
@@ -299,10 +304,10 @@ elif selected_tab == "Trafficking Over Time":
         )
 
         # Prepare dynamic metrics
-        total_victims = int(filtered_data['txtVALUE'].sum())
-        total_by_gender = filtered_data.groupby('Sex')['txtVALUE'].sum()
+        total_victims = int(line_filtered_data['txtVALUE'].sum())
+        total_by_gender = line_filtered_data.groupby('Sex')['txtVALUE'].sum()
         total_by_gender = total_by_gender[["Female", "Male"]] if "Female" in total_by_gender and "Male" in total_by_gender else total_by_gender
-        total_by_age = filtered_data.groupby('Age')['txtVALUE'].sum()
+        total_by_age = line_filtered_data.groupby('Age')['txtVALUE'].sum()
         total_by_age = {
             "Minors": int(total_by_age.get("0 to 17 years", 0)),
             "Adults": int(total_by_age.get("18 years or over", 0)),
@@ -392,11 +397,11 @@ elif selected_tab == "Trafficking Over Time":
         st.divider()  
 
         # Use ui.tabs for switching between "By Gender" and "By Age Group"
-        line_filtered_data = us_data[
+        line_line_filtered_data = us_data[
             (us_data["Year"] >= selected_years[0]) & (us_data["Year"] <= selected_years[1])
         ]
 
-        # Line charts for gender and age group
+       # Line charts for gender and age group
         analysis_type = ui.tabs(
             options=["By Gender", "By Age Group"],
             default_value=st.session_state["analysis_type"]
@@ -404,7 +409,6 @@ elif selected_tab == "Trafficking Over Time":
         st.session_state["analysis_type"] = analysis_type
 
         if analysis_type == "By Gender":
-            # Exclude "Other" and "Unknown" genders
             gender_data = line_filtered_data[
                 ~line_filtered_data["Sex"].isin(["Other", "Unknown"])
             ].groupby(["Year", "Sex"], as_index=False)["txtVALUE"].sum()
@@ -418,9 +422,8 @@ elif selected_tab == "Trafficking Over Time":
                 title="Trafficking Trends by Gender"
             )
         elif analysis_type == "By Age Group":
-            # Exclude "Other" and "Unknown" age groups
             age_data = line_filtered_data[
-                ~filtered_data["Age"].isin(["Other", "Unknown"])
+                ~line_filtered_data["Age"].isin(["Other", "Unknown"])
             ].groupby(["Year", "Age"], as_index=False)["txtVALUE"].sum()
 
             fig = px.line(
@@ -432,7 +435,9 @@ elif selected_tab == "Trafficking Over Time":
                 title="Trafficking Trends by Age Group"
             )
 
+        # Display the chart
         st.plotly_chart(fig, use_container_width=True)
+        
 elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
     display_header_image("images/header3.jpg")
