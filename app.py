@@ -214,31 +214,6 @@ if selected_tab == "Overview":
     map_col, controls_col = st.columns([4, 1])
 
     with controls_col:
-        # Date range slider
-        min_year, max_year = int(data['Year'].min()), int(data['Year'].max())
-        date_range = st.slider(
-            "Select Date Range",
-            min_value=min_year,
-            max_value=max_year,
-            value=st.session_state["date_range"] or (min_year, max_year),
-            step=1
-        )
-        st.session_state["date_range"] = date_range
-
-
-        # Country dropdown
-        country_list = ["All Countries"] + sorted(data["Country"].dropna().unique())
-        selected_countries = st.multiselect(
-            "Select Country/Countries",
-            options=country_list,
-            default=st.session_state["selected_countries"]
-        )
-        st.session_state["selected_countries"] = selected_countries
-
-    # Interactive controls for the map
-    map_col, controls_col = st.columns([4, 1])
-
-    with controls_col:
         # Date range slider with a unique key
         min_year, max_year = int(data['Year'].min()), int(data['Year'].max())
         date_range = st.slider(
