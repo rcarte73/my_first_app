@@ -39,6 +39,16 @@ selected_tab = st.sidebar.radio(
     options=["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"],
 )
 
+# Initialize session state for inputs
+if "date_range" not in st.session_state:
+    st.session_state["date_range"] = None
+if "selected_countries" not in st.session_state:
+    st.session_state["selected_countries"] = ["All Countries"]
+if "selected_years" not in st.session_state:
+    st.session_state["selected_years"] = (2007, 2020)
+if "analysis_type" not in st.session_state:
+    st.session_state["analysis_type"] = "By Gender"
+
 # Load the data
 file_path = "data_glotip.xlsx" 
 data = pd.read_excel(file_path, sheet_name="data_glotip_1")
@@ -54,6 +64,7 @@ if selected_tab == "Overview":
 
     # Row 1: Description columns
     col1, col2 = st.columns(2)
+    min_year, max_year = int(data["Year"].min()), int(data["Year"].max())
 
     with col1:
         st.markdown(
@@ -132,71 +143,75 @@ if selected_tab == "Overview":
             "Select Date Range",
             min_value=min_year,
             max_value=max_year,
-            value=(min_year, max_year),
+            value=st.session_state["date_range"] or (min_year, max_year),
             step=1
         )
+        st.session_state["date_range"] = date_range
+
 
         # Country dropdown
         country_list = ["All Countries"] + sorted(data["Country"].dropna().unique())
         selected_countries = st.multiselect(
             "Select Country/Countries",
             options=country_list,
-            default="All Countries"
+            default=st.session_state["selected_countries"]
         )
+        st.session_state["selected_countries"] = selected_countries
+
 
         # Filter data by date range and selected countries
-        map_filtered_data = data[(data['Year'] >= date_range[0]) & (data['Year'] <= date_range[1])]
+        overview_data = data[
+            (data["Year"] >= date_range[0]) & (data["Year"] <= date_range[1])
+        ]
         if "All Countries" not in selected_countries:
-            map_filtered_data = map_filtered_data[map_filtered_data["Country"].isin(selected_countries)]
-            
+            overview_data = overview_data[overview_data["Country"].isin(selected_countries)]
+
     with map_col:
         # Prepare filtered data for the map
-        map_data = map_filtered_data.groupby('Country', as_index=False)['txtVALUE'].sum()
+        map_data = overview_data.groupby("Country", as_index=False)["txtVALUE"].sum()
         fig = px.choropleth(
             map_data,
             locations="Country",
             locationmode="country names",
             color="txtVALUE",
-            color_continuous_scale="oranges", 
+            color_continuous_scale="oranges",
             labels={"txtVALUE": "Victims"}
         )
         fig.update_layout(
-        geo=dict(showframe=False, showcoastlines=True, projection_type='equirectangular'),
-        title_text="",  
-        title_x=0.5  
-)
-
+            geo=dict(showframe=False, showcoastlines=True, projection_type="equirectangular")
+        )
         st.plotly_chart(fig, use_container_width=True)
 
 elif selected_tab == "Trafficking Over Time":
     # Header image
     st.image("header2.jpg", use_container_width=True)
 
-    # Filter data for the United States of America from 2007 onwards
-    data["Country"] = data["Country"].str.strip().str.title()  # Normalize Country column
+    # Filter data
+    data["Country"] = data["Country"].str.strip().str.title()
     us_data = data[(data["Country"] == "United States Of America") & (data["Year"] >= 2007) & (data["Year"] <= 2020) ]
 
     if us_data.empty:
         st.warning("No data available.")
     else:
         # Clean the Year column
-        us_data = us_data.dropna(subset=["Year"])  # Drop rows with NaN in Year
-        us_data["Year"] = pd.to_numeric(us_data["Year"], errors="coerce")  # Convert safely
-        us_data = us_data.dropna(subset=["Year"])  # Drop remaining invalid rows
+        us_data = us_data.dropna(subset=["Year"]) 
+        us_data["Year"] = pd.to_numeric(us_data["Year"], errors="coerce")
+        us_data = us_data.dropna(subset=["Year"])
 
         # Year slider
-        min_year, max_year = int(us_data['Year'].min()), int(us_data['Year'].max())
+        min_year, max_year = us_data["Year"].min(), us_data["Year"].max()
         selected_years = st.slider(
             "Select Year Range",
-            min_value=min_year,
-            max_value=max_year,
-            value=(min_year, max_year),
-            step=1,
+            min_value=int(min_year),
+            max_value=int(max_year),
+            value=st.session_state["selected_years"]
         )
+        st.session_state["selected_years"] = selected_years
 
         # Filter data by selected years
-        filtered_data = us_data[(us_data['Year'] >= selected_years[0]) & (us_data['Year'] <= selected_years[1])]
-
+        filtered_data = us_data[
+            (us_data["Year"] >= selected_years[0]) & (us_data["Year"] <= selected_years[1])
+        ]
         # Dynamic title
         st.markdown(
             f"""
@@ -308,48 +323,54 @@ elif selected_tab == "Trafficking Over Time":
         st.markdown("<br><br>", unsafe_allow_html=True)  
         st.divider()  
 
-        # Use `ui.tabs` for switching between "By Gender" and "By Age Group"
+        # Use ui.tabs for switching between "By Gender" and "By Age Group"
+        line_filtered_data = us_data[
+            (us_data["Year"] >= selected_years[0]) & (us_data["Year"] <= selected_years[1])
+        ]
+
+        # Line charts for gender and age group
         analysis_type = ui.tabs(
             options=["By Gender", "By Age Group"],
-            default_value="By Gender",
-            key="analysis_type"
+            default_value=st.session_state["analysis_type"]
         )
+        st.session_state["analysis_type"] = analysis_type
 
-        # Visualization based on selected tab
         if analysis_type == "By Gender":
-            # Filter out "Other"
-            gender_data = filtered_data[(filtered_data['Sex'].notna()) & (filtered_data['Sex'] != "Other")]
-            gender_data = gender_data.groupby(['Year', 'Sex'], as_index=False)['txtVALUE'].sum()
-            st.markdown('<div class="line-chart-title">Trafficking Trends by Gender in the U.S.</div>', unsafe_allow_html=True)
+            # Exclude "Other" and "Unknown" genders
+            gender_data = line_filtered_data[
+                ~line_filtered_data["Sex"].isin(["Other", "Unknown"])
+            ].groupby(["Year", "Sex"], as_index=False)["txtVALUE"].sum()
+
             fig = px.line(
                 gender_data,
                 x="Year",
                 y="txtVALUE",
                 color="Sex",
                 labels={"txtVALUE": "Victims", "Sex": "Gender"},
-                color_discrete_map={"Male": "#1f77b4", "Female": "#ff7f0e"},  # Custom colors for Male and Female
+                title="Trafficking Trends by Gender"
             )
         elif analysis_type == "By Age Group":
-            age_data = filtered_data[filtered_data['Age'].notna()].groupby(['Year', 'Age'], as_index=False)['txtVALUE'].sum()
-            st.markdown('<div class="line-chart-title">Trafficking Trends by Age Group in the U.S.</div>', unsafe_allow_html=True)
+            # Exclude "Other" and "Unknown" age groups
+            age_data = line_filtered_data[
+                ~filtered_data["Age"].isin(["Other", "Unknown"])
+            ].groupby(["Year", "Age"], as_index=False)["txtVALUE"].sum()
+
             fig = px.line(
                 age_data,
                 x="Year",
                 y="txtVALUE",
                 color="Age",
                 labels={"txtVALUE": "Victims", "Age": "Age Group"},
-                color_discrete_map={"0 to 17 years": "#2ca02c", "18 years or over": "#d62728"},  # Custom colors for Age Groups
+                title="Trafficking Trends by Age Group"
             )
 
-        # Display the chart
         st.plotly_chart(fig, use_container_width=True)
-
 elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
     st.image("header3.jpg", use_container_width=True)
 
-    # Page layout with blank margins
-    left_margin, content_area, right_margin = st.columns([1, 6, 1])  # 1: Blank margin, 6: Content area, 1: Blank margin
+    # Page layout: # 1: Blank margin, 6: Content area, 1: Blank margin
+    left_margin, content_area, right_margin = st.columns([1, 6, 1])
 
     with content_area:
         # Centered Tabs
@@ -462,11 +483,11 @@ elif selected_tab == "Conviction and Prosecution Rates":
         st.divider()  
 
     # Step 1: Replace '<5' with 2 in txtVALUE
-    data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')  # Ensure numeric
+    data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')
     data.loc[data['txtVALUE'] < 5, 'txtVALUE'] = 2
 
     # Step 2: Filter for the United States
-    data["Country"] = data["Country"].str.strip().str.title()  # Standardize country names
+    data["Country"] = data["Country"].str.strip().str.title()
     us_data = data[data["Country"] == "United States Of America"]
 
     # Step 3: Filter for relevant indicators
@@ -479,45 +500,39 @@ elif selected_tab == "Conviction and Prosecution Rates":
     us_data = us_data[(us_data["Year"] >= 2007) & (us_data["Year"] <= 2020)]
 
     # Check if the filtered dataset is empty
-
     if us_data.empty:
         st.warning("No data available for the United States of America from 2007 to 2020 in the selected dataset.")
     else:
-        # Step 6: Separate Prosecutions and Convictions
-        prosecution_data = us_data[us_data["Indicator"] == "Persons prosecuted"]
-        conviction_data = us_data[us_data["Indicator"] == "Persons convicted"]
-
-        # Aggregate data by year for visualizations
+        # Step 6: Aggregate prosecution and conviction data
         prosecution_data = (
-            prosecution_data.groupby("Year", as_index=False)["txtVALUE"]
+            us_data[us_data["Indicator"] == "Persons prosecuted"]
+            .groupby("Year", as_index=False)["txtVALUE"]
             .sum()
             .rename(columns={"txtVALUE": "Prosecutions"})
         )
         conviction_data = (
-            conviction_data.groupby("Year", as_index=False)["txtVALUE"]
+            us_data[us_data["Indicator"] == "Persons convicted"]
+            .groupby("Year", as_index=False)["txtVALUE"]
             .sum()
             .rename(columns={"txtVALUE": "Convictions"})
         )
 
-        # Merge Prosecution and Conviction Data
+        # Step 7: Merge prosecution and conviction data
         combined_data = pd.merge(prosecution_data, conviction_data, on="Year", how="outer").fillna(0)
         combined_data["Conviction Rate (%)"] = (
             (combined_data["Convictions"] / combined_data["Prosecutions"]) * 100
         ).fillna(0)
         combined_data["Difference"] = combined_data["Prosecutions"] - combined_data["Convictions"]
-        combined_data["Prosecution Status"] = combined_data["Difference"].apply(
-            lambda x: "Above" if x >= 0 else "Below"
-        )
 
-        # Year slider
-        min_year, max_year = combined_data["Year"].min(), combined_data["Year"].max()
+        # Year slider with session state
+        min_year, max_year = int(combined_data["Year"].min()), int(combined_data["Year"].max())
         selected_years = st.slider(
             "Select Year Range",
-            min_value=int(min_year),
-            max_value=int(max_year),
-            value=(int(min_year), int(max_year)),
-            step=1,
+            min_value=min_year,
+            max_value=max_year,
+            value=st.session_state.get("selected_years", (min_year, max_year)),
         )
+        st.session_state["selected_years"] = selected_years
 
         # Filter data by selected years
         filtered_data = combined_data[
@@ -555,35 +570,35 @@ elif selected_tab == "Conviction and Prosecution Rates":
             unsafe_allow_html=True,
         )
 
-        # Create a bar chart for Prosecutions
+        # Step 8: Create a bar chart for prosecutions
         fig = px.bar(
-            prosecution_data,
+            filtered_data,
             x="Year",
             y="Prosecutions",
             labels={"Prosecutions": "Prosecutions"},
             title=None,
-            color_discrete_sequence=["#1f77b4"],  # Standard blue color for Prosecutions
+            color_discrete_sequence=["#1f77b4"],
         )
 
-        # Add Convictions as a line chart
+        # Add convictions as a line chart
         fig.add_scatter(
-            x=conviction_data["Year"],
-            y=conviction_data["Convictions"],
+            x=filtered_data["Year"],
+            y=filtered_data["Convictions"],
             mode="lines+markers",
             name="Convictions",
             line=dict(color="#ff7f0e", width=2),
         )
 
-        # Add annotations for the difference with color coding
+        # Add annotations for the difference, Green for positive, Red for negative
         for i in range(len(filtered_data)):
             difference = filtered_data.iloc[i]["Difference"]
-            color = "green" if difference > 0 else "red"  # Green for positive, Red for negative
+            color = "green" if difference > 0 else "red"
             fig.add_annotation(
                 x=filtered_data.iloc[i]["Year"],
-                y=filtered_data.iloc[i]["Prosecutions"] + 10,  # Position above the bar
-                text=f"{difference:+}",  # Include "+" for positive values
+                y=filtered_data.iloc[i]["Prosecutions"] + 10,
+                text=f"{difference:+}", 
                 showarrow=False,
-                font=dict(color=color, size=14, family="Arial Black"),  # Color-coded, bold font
+                font=dict(color=color, size=14, family="Arial Black"),
             )
 
         # Update layout
@@ -600,7 +615,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
             ),
         )
 
-        # Update traces to include Prosecutions in the legend
+        # Add prosecutions to the legend
         fig.update_traces(name="Prosecutions", selector=dict(type="bar"))
 
         # Display the chart
