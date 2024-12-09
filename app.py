@@ -702,7 +702,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
             color = "green" if difference > 0 else "red"
             fig.add_annotation(
                 x=filtered_data.iloc[i]["Year"],
-                y=filtered_data.iloc[i]["Prosecutions"] + 50,
+                y=filtered_data.iloc[i]["Prosecutions"] + 45,
                 text=f"{difference:+}",
                 showarrow=False,
                 font=dict(color=color, size=14, family="Arial Black"),
