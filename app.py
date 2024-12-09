@@ -347,220 +347,157 @@ elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
     st.image("header3.jpg", use_container_width=True)
 
-    # Page layout with blank margins
-    left_margin, content_area, right_margin = st.columns([1, 6, 1])  # 1: Blank margin, 6: Content area, 1: Blank margin
+    # Normalize the Country column
+    data["Country"] = data["Country"].str.strip().str.title()  # Ensure consistent formatting
 
-    with content_area:
-        # Centered Tabs
-        vulnerabilities_tab, traffickers_tab, control_tab, survivors_tab = st.tabs(
-            ["Vulnerabilities", "Traffickers", "Control", "Survivors"]
+    # Filter data for the United States
+    us_data = data[data["Country"] == "United States Of America"]
+
+    if us_data.empty:
+        st.warning("No data available for the United States of America in the selected dataset.")
+        st.write("Preview of Available Data:", data.head())  # Display data for debugging
+    else:
+        # Clean the Year column
+        us_data = us_data.dropna(subset=["Year"])  # Drop rows with NaN in Year
+        us_data["Year"] = pd.to_numeric(us_data["Year"], errors="coerce")  # Ensure Year is numeric
+        us_data = us_data.dropna(subset=["Year"])  # Drop rows with invalid years
+
+        # Debugging Step: Check distinct values in Indicator
+        unique_indicators = us_data["Indicator"].unique()
+        st.write("Unique Indicators in U.S. Data:", unique_indicators)  # Confirm relevant values are present
+
+        # Filter for Prosecutions and Convictions
+        prosecution_data = us_data[us_data["Indicator"] == "Persons prosecuted"]
+        conviction_data = us_data[us_data["Indicator"] == "Persons convicted"]
+
+        # Debugging Step: Display filtered data
+        st.write("Prosecution Data Preview:", prosecution_data.head())
+        st.write("Conviction Data Preview:", conviction_data.head())
+
+        # Year slider
+        min_year, max_year = int(us_data['Year'].min()), int(us_data['Year'].max())
+        selected_years = st.slider(
+            "Select Year Range",
+            min_value=min_year,
+            max_value=max_year,
+            value=(min_year, max_year),
+            step=1,
         )
 
-        # Page title under tabs
+        # Filter data by selected years
+        filtered_prosecution_data = prosecution_data[
+            (prosecution_data['Year'] >= selected_years[0]) & (prosecution_data['Year'] <= selected_years[1])
+        ]
+        filtered_conviction_data = conviction_data[
+            (conviction_data['Year'] >= selected_years[0]) & (conviction_data['Year'] <= selected_years[1])
+        ]
+
+        # Debugging Step: Check filtered data
+        st.write("Filtered Prosecution Data:", filtered_prosecution_data)
+        st.write("Filtered Conviction Data:", filtered_conviction_data)
+
+        # Merge the data for visualization
+        combined_data = pd.merge(
+            filtered_prosecution_data[["Year", "txtVALUE"]].rename(columns={"txtVALUE": "Prosecutions"}),
+            filtered_conviction_data[["Year", "txtVALUE"]].rename(columns={"txtVALUE": "Convictions"}),
+            on="Year",
+            how="outer"
+        ).fillna(0)  # Replace NaN with 0 for missing years
+
+        # Calculate conviction rate
+        combined_data["Conviction Rate (%)"] = (
+            combined_data["Convictions"] / combined_data["Prosecutions"]
+        ) * 100
+        combined_data["Conviction Rate (%)"] = combined_data["Conviction Rate (%)"].fillna(0)
+
+        # Debugging Step: Preview combined data
+        st.write("Combined Data for Chart:", combined_data)
+
+        # Dynamic page title with year range
         st.markdown(
-            """
+            f"""
             <style>
-                .page-title {
+                .page-title {{
                     font-family: 'Sans', sans-serif;
                     font-size: 28px;
                     font-weight: bold;
                     color: navy;
                     text-align: center;
-                    margin-top: 20px;  /* Add spacing above the title */
-                }
+                    margin-bottom: 20px;
+                }}
             </style>
-            <div class="page-title">Convictions and Prosecution Rates</div>
+            <div class="page-title">Convictions and Prosecution Rates ({selected_years[0]} - {selected_years[1]})</div>
             """,
             unsafe_allow_html=True,
         )
 
-    # Tab 1: Vulnerabilities
-    with vulnerabilities_tab:
+        # KPI for conviction rate
+        avg_conviction_rate = combined_data["Conviction Rate (%)"].mean()
         st.markdown(
-            """
+            f"""
             <style>
-                .vulnerability-title {
+                .kpi-container {{
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100px;
+                    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);  /* Add subtle gray drop shadow */
+                    border-radius: 8px;
+                    padding: 10px;
+                    text-align: center;
+                    background-color: #f9f9f9;
+                    margin-bottom: 20px;  /* Add spacing below */
+                }}
+                .kpi-title {{
                     font-family: 'Sans', sans-serif;
                     font-size: 18px;
-                    font-weight: 600;
+                    font-weight: bold;
                     color: navy;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .vulnerability-body {
+                }}
+                .kpi-content {{
                     font-family: 'Sans', sans-serif;
-                    font-size: 14px;
-                    font-weight: 300;
+                    font-size: 24px;
+                    font-weight: bold;
                     color: black;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .button-learn-more {
-                    background-color: #f0f0f0;
-                    color: black;
-                    padding: 10px 15px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    font-family: 'Sans', sans-serif;
-                    border: 1px solid navy;
-                    cursor: pointer;
-                    margin: 0 auto; /* Center the button */
-                }
-                .button-learn-more:hover {
-                    background-color: navy;
-                    color: white;
-                }
+                }}
             </style>
-            <div class="vulnerability-title">Vulnerabilities</div>
-            <div class="vulnerability-body">
-                Certain factors increase the risk of being trafficked. These include poverty, lack of education, migration, 
-                homelessness, and lack of social safety nets. Vulnerable individuals are often targeted and exploited.
-            </div>
-            <div style="text-align: center;">
-                <a href="https://polarisproject.org/vulnerabilities-and-recruitment/" target="_blank" class="button-learn-more">Learn More</a>
+            <div class="kpi-container">
+                <div class="kpi-title">Average Conviction Rate</div>
+                <div class="kpi-content">{avg_conviction_rate:.2f}%</div>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
 
-    # Tab 2: Traffickers
-    with traffickers_tab:
-        st.markdown(
-            """
-            <style>
-                .traffickers-title {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: navy;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .traffickers-body {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 14px;
-                    font-weight: 300;
-                    color: black;
-                    text-align: center;
-                }
-            </style>
-            <div class="traffickers-title">Who are the traffickers?</div>
-            <div class="traffickers-body">
-                Perpetrators of human trafficking span all racial, ethnic, and gender demographics and are as diverse as survivors. 
-                Some use their privilege, wealth, and power as a means of control while others experience the same socio-economic 
-                oppression as their victims. They include individuals, business owners, members of a gang or network, parents or 
-                family members of victims, intimate partners, owners of farms or restaurants, and powerful corporate executives 
-                and government representatives.
-            </div>
-            """,
-            unsafe_allow_html=True
+        # Bar chart with line graph
+        fig = px.bar(
+            combined_data,
+            x="Year",
+            y="Prosecutions",
+            labels={"Prosecutions": "Prosecutions"},
+            title=None,
+            color_discrete_sequence=["#1f77b4"],  # Blue bars
+        )
+        fig.add_scatter(
+            x=combined_data["Year"],
+            y=combined_data["Convictions"],
+            mode="lines+markers",
+            name="Convictions",
+            line=dict(color="#ff7f0e", width=2),  # Orange line
+        )
+        fig.update_layout(
+            yaxis=dict(title="Number of People", range=[0, max(combined_data["Prosecutions"].max(), combined_data["Convictions"].max())]),
+            xaxis=dict(title="Year"),
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ),
         )
 
-    # Tab 3: Control
-    with control_tab:
-        st.markdown(
-            """
-            <style>
-                .control-title {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: navy;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .control-body {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 14px;
-                    font-weight: 300;
-                    color: black;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .button-learn-more {
-                    background-color: #f0f0f0;
-                    color: black;
-                    padding: 10px 15px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    font-family: 'Sans', sans-serif;
-                    border: 1px solid navy;
-                    cursor: pointer;
-                    margin: 0 auto; /* Center the button */
-                }
-                .button-learn-more:hover {
-                    background-color: navy;
-                    color: white;
-                }
-            </style>
-            <div class="control-title">How do traffickers control victims?</div>
-            <div class="control-body">
-                Traffickers employ a variety of control tactics, the most common include physical and emotional abuse and threats, 
-                isolation from friends and family, and economic abuse. They make promises aimed at addressing the needs of their 
-                target in order to impose control. As a result, victims become trapped and fear leaving for myriad reasons, 
-                including psychological trauma, shame, emotional attachment, or physical threats to themselves or their family.
-            </div>
-            <div style="text-align: center;">
-                <a href="https://polarisproject.org/understanding-human-trafficking/" target="_blank" class="button-learn-more">Learn More</a>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-    # Tab 4: Survivors
-    with survivors_tab:
-        st.markdown(
-            """
-            <style>
-                .survivors-title {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: navy;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .survivors-body {
-                    font-family: 'Sans', sans-serif;
-                    font-size: 14px;
-                    font-weight: 300;
-                    color: black;
-                    text-align: center;
-                    margin-bottom: 20px;
-                }
-                .button-learn-more {
-                    background-color: #f0f0f0;
-                    color: black;
-                    padding: 10px 15px;
-                    text-align: center;
-                    text-decoration: none;
-                    display: inline-block;
-                    border-radius: 5px;
-                    font-size: 16px;
-                    font-family: 'Sans', sans-serif;
-                    border: 1px solid navy;
-                    cursor: pointer;
-                    margin: 0 auto; /* Center the button */
-                }
-                .button-learn-more:hover {
-                    background-color: navy;
-                    color: white;
-                }
-            </style>
-            <div class="survivors-title">Who are the survivors?</div>
-            <div class="survivors-body">
-                Victims and survivors of human trafficking represent every race and ethnicity but some forms of trafficking 
-                are more likely to affect specific ethnic groups.
-            </div>
-            <div style="text-align: center;">
-                <a href="https://polarisproject.org/our-approach/" target="_blank" class="button-learn-more">Learn More</a>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        # Display the chart
+        st.plotly_chart(fig, use_container_width=True)
