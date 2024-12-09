@@ -239,28 +239,31 @@ if selected_tab == "Overview":
     map_col, controls_col = st.columns([4, 1])
 
     with controls_col:
-        # Date range slider
+        # Date range slider with a unique key
         min_year, max_year = int(data['Year'].min()), int(data['Year'].max())
         date_range = st.slider(
             "Select Date Range",
             min_value=min_year,
             max_value=max_year,
-            value=st.session_state["date_range"] or (min_year, max_year),
-            step=1
+            value=st.session_state.get("date_range", (min_year, max_year)),
+            step=1,
+            key="overview_date_range"  # Unique key for this slider
         )
         st.session_state["date_range"] = date_range
 
-        # Country dropdown
+        # Country dropdown with a unique key
         country_list = ["All Countries"] + sorted(data["Country"].dropna().unique())
         selected_countries = st.multiselect(
             "Select Country/Countries",
             options=country_list,
-            default=st.session_state["selected_countries"]
+            default=st.session_state.get("selected_countries", ["All Countries"]),
+            key="overview_selected_countries"  # Unique key for this multiselect
         )
         st.session_state["selected_countries"] = selected_countries
 
         # Use cached function to prepare overview data
         overview_data = prepare_overview_data(data, date_range, selected_countries)
+
 
 elif selected_tab == "Trafficking Over Time":
     # Header image
