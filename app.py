@@ -708,12 +708,12 @@ elif selected_tab == "Conviction and Prosecution Rates":
                 font=dict(color=color, size=14, family="Arial Black"),
             )
 
-        # Update layout
+        # Update layout to remove undefined title
         fig.update_layout(
-            title=None,
+            title=None,  # Ensure no title is defined
             yaxis=dict(title="Number of People"),
             xaxis=dict(title="Year"),
-            showlegend=True,  # Ensure the legend is displayed
+            showlegend=True,
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -721,8 +721,9 @@ elif selected_tab == "Conviction and Prosecution Rates":
                 xanchor="right",
                 x=1,
             ),
-            barmode="group",  # Group bar and line charts together
+            barmode="group",
         )
+
 
         # Display the chart
         st.plotly_chart(fig, use_container_width=True)
