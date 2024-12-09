@@ -463,37 +463,18 @@ elif selected_tab == "Conviction and Prosecution Rates":
     data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')  # Ensure numeric
     data.loc[data['txtVALUE'] < 5, 'txtVALUE'] = 2
 
-    # Debug: Check initial dataset shape
-    st.write("Initial dataset shape:", data.shape)
-
     # Step 2: Filter for the United States
     data["Country"] = data["Country"].str.strip().str.title()  # Standardize country names
     us_data = data[data["Country"] == "United States Of America"]
 
-    # Debug: Check after filtering by Country
-    st.write("Dataset shape after filtering by Country:", us_data.shape)
-    st.write(us_data.head())
-
     # Step 3: Filter for relevant indicators
     us_data = us_data[us_data["Indicator"].isin(["Persons prosecuted", "Persons convicted"])]
-
-    # Debug: Check after filtering by Indicator
-    st.write("Dataset shape after filtering by Indicator:", us_data.shape)
-    st.write(us_data.head())
 
     # Step 4: Filter for Dimension = "Total"
     us_data = us_data[us_data["Dimension"] == "Total"]
 
-    # Debug: Check after filtering by Dimension
-    st.write("Dataset shape after filtering by Dimension:", us_data.shape)
-    st.write(us_data.head())
-
     # Step 5: Filter for Year range (2007–2020)
     us_data = us_data[(us_data["Year"] >= 2007) & (us_data["Year"] <= 2020)]
-
-    # Debug: Check after filtering by Year range
-    st.write("Dataset shape after filtering by Year range:", us_data.shape)
-    st.write(us_data.head())
 
     # Check if the filtered dataset is empty
     if us_data.empty:
@@ -515,18 +496,11 @@ elif selected_tab == "Conviction and Prosecution Rates":
             .rename(columns={"txtVALUE": "Convictions"})
         )
 
-        # Debug: Check aggregated data
-        st.write("Prosecution data:", prosecution_data)
-        st.write("Conviction data:", conviction_data)
-
         # Calculate conviction rate for each year
         combined_data = pd.merge(prosecution_data, conviction_data, on="Year", how="outer").fillna(0)
         combined_data["Conviction Rate (%)"] = (
             (combined_data["Convictions"] / combined_data["Prosecutions"]) * 100
         ).fillna(0)
-
-        # Debug: Check combined data
-        st.write("Combined data:", combined_data)
 
         # Dynamic page title
         st.markdown(
