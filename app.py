@@ -234,17 +234,24 @@ elif selected_tab == "Trafficking Over Time":
         us_data = us_data.dropna(subset=["Year"])
 
         # Year slider
+        if us_data.empty:
+            st.warning("No data available for the selected criteria.")
+            min_year, max_year = 2000, 2020  # Replace with appropriate defaults
+        else:
+            min_year, max_year = int(us_data["Year"].min()), int(us_data["Year"].max())
+
         if "trafficking_years" not in st.session_state:
-            st.session_state["trafficking_years"] = (2007, 2020)
+            st.session_state["trafficking_years"] = (min_year, max_year)
 
         selected_years = st.slider(
             "Select Year Range",
-            min_value=int(min_year),
-            max_value=int(max_year),
+            min_value=min_year,
+            max_value=max_year,
             value=st.session_state["trafficking_years"],
-            key="trafficking_year_slider"  # Unique key for this slider
+            key="trafficking_year_slider"
         )
         st.session_state["trafficking_years"] = selected_years
+
 
 
         # Filter data by selected years
@@ -565,15 +572,21 @@ elif selected_tab == "Conviction and Prosecution Rates":
         combined_data["Difference"] = combined_data["Prosecutions"] - combined_data["Convictions"]
 
         # Year slider with session state
+        if combined_data.empty:
+            st.warning("No data available for the selected criteria.")
+            min_year, max_year = 2000, 2020  # Replace with appropriate defaults
+        else:
+            min_year, max_year = int(combined_data["Year"].min()), int(combined_data["Year"].max())
+
         if "conviction_years" not in st.session_state:
-            st.session_state["conviction_years"] = (min_year, max_year)  # Default range for conviction data
+            st.session_state["conviction_years"] = (min_year, max_year)
 
         selected_years = st.slider(
             "Select Year Range",
             min_value=min_year,
             max_value=max_year,
             value=st.session_state["conviction_years"],
-            key="conviction_year_slider"  # Unique key for this slider
+            key="conviction_year_slider"
         )
         st.session_state["conviction_years"] = selected_years
 
