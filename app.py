@@ -437,7 +437,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     including psychological trauma, shame, emotional attachment, or physical threats to themselves or their family.
                 </div>
                 <div style="text-align: center;">
-                    <a href="https://polarisproject.org/understanding-human-trafficking/" target="_blank" class="button-learn-more" style="background-color: #f0f0f0; color: black; padding: 10px 15px; text-align: center; text-decoration: none; display: inline-block; border-radius: 5px; font-size: 16px; border: 1px solid navy; cursor: pointer;">Learn More</a>
+                    <a href="https://polarisproject.org/understanding-human-trafficking/" target="_blank" class="button-learn-more">Learn More</a>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -453,11 +453,13 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     are more likely to affect specific ethnic groups.
                 </div>
                 <div style="text-align: center;">
-                    <a href="https://polarisproject.org/our-approach/" target="_blank" class="button-learn-more" style="background-color: #f0f0f0; color: black; padding: 10px 15px; text-align: center; text-decoration: none; display: inline-block; border-radius: 5px; font-size: 16px; border: 1px solid navy; cursor: pointer;">Learn More</a>
+                    <a href="https://polarisproject.org/our-approach/" target="_blank" class="button-learn-more">Learn More</a>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
+        # Add vertical space after KPIs 
+        st.divider()  
 
     # Step 1: Replace '<5' with 2 in txtVALUE
     data['txtVALUE'] = pd.to_numeric(data['txtVALUE'], errors='coerce')  # Ensure numeric
@@ -477,6 +479,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
     us_data = us_data[(us_data["Year"] >= 2007) & (us_data["Year"] <= 2020)]
 
     # Check if the filtered dataset is empty
+
     if us_data.empty:
         st.warning("No data available for the United States of America from 2007 to 2020 in the selected dataset.")
     else:
@@ -496,11 +499,30 @@ elif selected_tab == "Conviction and Prosecution Rates":
             .rename(columns={"txtVALUE": "Convictions"})
         )
 
-        # Calculate conviction rate for each year
+        # Merge Prosecution and Conviction Data
         combined_data = pd.merge(prosecution_data, conviction_data, on="Year", how="outer").fillna(0)
         combined_data["Conviction Rate (%)"] = (
             (combined_data["Convictions"] / combined_data["Prosecutions"]) * 100
         ).fillna(0)
+        combined_data["Difference"] = combined_data["Prosecutions"] - combined_data["Convictions"]
+        combined_data["Prosecution Status"] = combined_data["Difference"].apply(
+            lambda x: "Above" if x >= 0 else "Below"
+        )
+
+        # Year slider
+        min_year, max_year = combined_data["Year"].min(), combined_data["Year"].max()
+        selected_years = st.slider(
+            "Select Year Range",
+            min_value=int(min_year),
+            max_value=int(max_year),
+            value=(int(min_year), int(max_year)),
+            step=1,
+        )
+
+        # Filter data by selected years
+        filtered_data = combined_data[
+            (combined_data["Year"] >= selected_years[0]) & (combined_data["Year"] <= selected_years[1])
+        ]
 
         # Dynamic page title
         st.markdown(
@@ -515,17 +537,17 @@ elif selected_tab == "Conviction and Prosecution Rates":
                     margin-bottom: 20px;
                 }}
             </style>
-            <div class="page-title">Convictions and Prosecution Rates (2007 - 2020)</div>
+            <div class="page-title">Convictions and Prosecution Rates ({selected_years[0]} - {selected_years[1]})</div>
             """,
             unsafe_allow_html=True,
         )
 
         # KPI for average conviction rate
-        avg_conviction_rate = combined_data["Conviction Rate (%)"].mean()
+        avg_conviction_rate = filtered_data["Conviction Rate (%)"].mean()
         st.markdown(
             f"""
             <div style="text-align: center; background-color: #f9f9f9; padding: 10px; 
-                         border-radius: 8px; margin-bottom: 20px;">
+                        border-radius: 8px; margin-bottom: 20px;">
                 <h4 style="color: navy;">Average Conviction Rate</h4>
                 <p style="font-size: 24px; color: black; font-weight: bold;">{avg_conviction_rate:.2f}%</p>
             </div>
@@ -533,16 +555,15 @@ elif selected_tab == "Conviction and Prosecution Rates":
             unsafe_allow_html=True,
         )
 
-        # Prosecutions bar chart
+        # Create a bar chart for Prosecutions
         fig = px.bar(
             prosecution_data,
             x="Year",
             y="Prosecutions",
             labels={"Prosecutions": "Prosecutions"},
             title=None,
-            color_discrete_sequence=["#1f77b4"],
+            color_discrete_sequence=["#1f77b4"],  # Standard blue color for Prosecutions
         )
-        fig.update_traces(name="Prosecutions", showlegend=True)
 
         # Add Convictions as a line chart
         fig.add_scatter(
@@ -552,6 +573,18 @@ elif selected_tab == "Conviction and Prosecution Rates":
             name="Convictions",
             line=dict(color="#ff7f0e", width=2),
         )
+
+        # Add annotations for the difference with color coding
+        for i in range(len(filtered_data)):
+            difference = filtered_data.iloc[i]["Difference"]
+            color = "green" if difference > 0 else "red"  # Green for positive, Red for negative
+            fig.add_annotation(
+                x=filtered_data.iloc[i]["Year"],
+                y=filtered_data.iloc[i]["Prosecutions"] + 10,  # Position above the bar
+                text=f"{difference:+}",  # Include "+" for positive values
+                showarrow=False,
+                font=dict(color=color, size=14, family="Arial Black"),  # Color-coded, bold font
+            )
 
         # Update layout
         fig.update_layout(
@@ -566,6 +599,9 @@ elif selected_tab == "Conviction and Prosecution Rates":
                 x=1,
             ),
         )
+
+        # Update traces to include Prosecutions in the legend
+        fig.update_traces(name="Prosecutions", selector=dict(type="bar"))
 
         # Display the chart
         st.plotly_chart(fig, use_container_width=True)
