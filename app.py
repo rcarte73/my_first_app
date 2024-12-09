@@ -5,6 +5,7 @@ import streamlit_shadcn_ui as ui
 from PIL import Image
 import os
 import base64
+import plotly.graph_objects as go
 
 # Set up page configuration
 st.set_page_config(page_title="Trafficking Dashboard", page_icon="images/icon.png", layout="wide")
@@ -627,26 +628,28 @@ elif selected_tab == "Conviction and Prosecution Rates":
             unsafe_allow_html=True,
         )
 
-        # Step 8: Create a bar chart for prosecutions
-        fig = px.bar(
-            filtered_data,
-            x="Year",
-            y="Prosecutions",
-            labels={"Prosecutions": "Prosecutions"},
-            title=None,
-            color_discrete_sequence=["#1f77b4"],
+        # Create the figure
+        fig = go.Figure()
+
+        # Add Prosecutions as a bar chart
+        fig.add_trace(
+            go.Bar(
+                x=filtered_data["Year"],
+                y=filtered_data["Prosecutions"],
+                name="Prosecutions",  # Explicitly set the name for the legend
+                marker_color="#1f77b4",  # Match the color
+            )
         )
 
-        # Rename the bar trace to explicitly set the legend entry
-        fig.update_traces(name="Prosecutions", selector=dict(type="bar"))
-
-        # Add convictions as a line chart
-        fig.add_scatter(
-            x=filtered_data["Year"],
-            y=filtered_data["Convictions"],
-            mode="lines+markers",
-            name="Convictions",
-            line=dict(color="#ff7f0e", width=2),
+        # Add Convictions as a line chart
+        fig.add_trace(
+            go.Scatter(
+                x=filtered_data["Year"],
+                y=filtered_data["Convictions"],
+                mode="lines+markers",
+                name="Convictions",  # Explicitly set the name for the legend
+                line=dict(color="#ff7f0e", width=2),
+            )
         )
 
         # Add annotations for the difference, Green for positive, Red for negative
@@ -663,9 +666,10 @@ elif selected_tab == "Conviction and Prosecution Rates":
 
         # Update layout
         fig.update_layout(
+            title=None,
             yaxis=dict(title="Number of People"),
             xaxis=dict(title="Year"),
-            showlegend=True,
+            showlegend=True,  # Ensure the legend is displayed
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -673,6 +677,7 @@ elif selected_tab == "Conviction and Prosecution Rates":
                 xanchor="right",
                 x=1,
             ),
+            barmode="group",  # Group bar and line charts together
         )
 
         # Display the chart
