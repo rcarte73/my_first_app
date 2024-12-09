@@ -106,26 +106,6 @@ def load_data(file_path, sheet_name="data_glotip_1"):
 
     return data
 
-@st.cache_data
-def prepare_overview_data(data, date_range, selected_countries):
-    """
-    Filters the data based on the selected date range and countries.
-
-    Args:
-        data (pd.DataFrame): The loaded data.
-        date_range (tuple): The selected start and end years as a range.
-        selected_countries (list): The list of selected countries.
-
-    Returns:
-        pd.DataFrame: Filtered data based on the provided criteria.
-    """
-    filtered_data = data[
-        (data["Year"] >= date_range[0]) & (data["Year"] <= date_range[1])
-    ]
-    if "All Countries" not in selected_countries:
-        filtered_data = filtered_data[filtered_data["Country"].isin(selected_countries)]
-    return filtered_data
-
 # Load the data using the cached function
 file_path = "data/data_glotip.xlsx"
 data = load_data(file_path)
@@ -214,31 +194,50 @@ if selected_tab == "Overview":
     map_col, controls_col = st.columns([4, 1])
 
     with controls_col:
-        # Date range slider with a unique key
+        # Date range slider
         min_year, max_year = int(data['Year'].min()), int(data['Year'].max())
         date_range = st.slider(
             "Select Date Range",
             min_value=min_year,
             max_value=max_year,
-            value=st.session_state.get("date_range", (min_year, max_year)),
-            step=1,
-            key="overview_date_range"  # Unique key for this slider
+            value=st.session_state["date_range"] or (min_year, max_year),
+            step=1
         )
         st.session_state["date_range"] = date_range
 
-        # Country dropdown with a unique key
+
+        # Country dropdown
         country_list = ["All Countries"] + sorted(data["Country"].dropna().unique())
         selected_countries = st.multiselect(
             "Select Country/Countries",
             options=country_list,
-            default=st.session_state.get("selected_countries", ["All Countries"]),
-            key="overview_selected_countries"  # Unique key for this multiselect
+            default=st.session_state["selected_countries"]
         )
         st.session_state["selected_countries"] = selected_countries
 
-        # Use cached function to prepare overview data
-        overview_data = prepare_overview_data(data, date_range, selected_countries)
 
+        # Filter data by date range and selected countries
+        overview_data = data[
+            (data["Year"] >= date_range[0]) & (data["Year"] <= date_range[1])
+        ]
+        if "All Countries" not in selected_countries:
+            overview_data = overview_data[overview_data["Country"].isin(selected_countries)]
+
+    with map_col:
+        # Prepare filtered data for the map
+        map_data = overview_data.groupby("Country", as_index=False)["txtVALUE"].sum()
+        fig = px.choropleth(
+            map_data,
+            locations="Country",
+            locationmode="country names",
+            color="txtVALUE",
+            color_continuous_scale="oranges",
+            labels={"txtVALUE": "Victims"}
+        )
+        fig.update_layout(
+            geo=dict(showframe=False, showcoastlines=True, projection_type="equirectangular")
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 elif selected_tab == "Trafficking Over Time":
     # Header image
