@@ -416,8 +416,8 @@ elif selected_tab == "Trafficking Over Time":
             # Define the color mapping to ensure "All victims" is red
             color_map = {
                 "All victims": "red",
-                "Female": "blue",
-                "Male": "green"
+                "Female": "orange",
+                "Male": "blue"
             }
 
             fig = px.line(
@@ -438,8 +438,8 @@ elif selected_tab == "Trafficking Over Time":
             # Define the color mapping to ensure "All victims" is red
             color_map = {
                 "All victims": "red",
-                "0 to 17 years": "blue",
-                "18 years or over": "green"
+                "0 to 17 years": "orange",
+                "18 years or over": "blue"
             }
 
             fig = px.line(
