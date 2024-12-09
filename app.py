@@ -343,12 +343,69 @@ elif selected_tab == "Trafficking Over Time":
         # Display the chart
         st.plotly_chart(fig, use_container_width=True)
 
+# Full Streamlit Code
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import streamlit_shadcn_ui as ui
+
+# Set up page configuration
+st.set_page_config(page_title="Trafficking Dashboard", page_icon="icon.png", layout="wide")
+
+# Sidebar and page styling
+st.markdown(
+    """
+    <style>
+        /* Main page background color */
+        .main {
+            background-color: #f0f0f0;
+        }
+
+        /* Sidebar background color */
+        .css-1d391kg {
+            background-color: white !important;
+        }
+
+        /* Sidebar text styling */
+        .css-1d391kg, .css-qbe2hs, .css-h5rgaw 
+            color: navy !important;
+            font-family: 'Sans', sans-serif !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Sidebar logo
+st.sidebar.image("icon.png", use_container_width=True)
+
+# Sidebar radio buttons
+selected_tab = st.sidebar.radio(
+    "",
+    options=["Overview", "Trafficking Over Time", "Conviction and Prosecution Rates"],
+)
+
+# Load the data
+file_path = "data_glotip.xlsx"  # Ensure this is the correct path to your data file
+data = pd.read_excel(file_path, sheet_name="data_glotip_1")
+
+# Normalize the Country column
+data["Country"] = data["Country"].str.strip().str.title()  # Ensure consistent formatting
+
+# Content rendering based on selected tab
+if selected_tab == "Overview":
+    # Overview Page Content
+    st.image("header.jpg", use_container_width=True)
+    # ... (existing Overview code here)
+
+elif selected_tab == "Trafficking Over Time":
+    # Trafficking Over Time Page Content
+    st.image("header2.jpg", use_container_width=True)
+    # ... (existing Trafficking Over Time code here)
+
 elif selected_tab == "Conviction and Prosecution Rates":
     # Header image
     st.image("header3.jpg", use_container_width=True)
-
-    # Normalize the Country column
-    data["Country"] = data["Country"].str.strip().str.title()  # Ensure consistent formatting
 
     # Filter data for the United States and from 2007 onwards
     us_data = data[(data["Country"] == "United States Of America") & (data["Year"] >= 2007)]
