@@ -1,7 +1,14 @@
 # Human Trafficking Trends Analysis App
 
 ## Streamlit Cloud Link
-App: https://humantrafficking.streamlit.app
+_Dash badge_
+
+[![Human Trafficking Analysis - Streamlit App](https://img.shields.io/badge/Human_Trafficking_Analysis-Streamlit_App-blue?style=for-the-badge)](https://humantrafficking.streamlit.app)
+
+_Query parameter badge_
+
+[![Human Trafficking Analysis - Streamlit App](https://img.shields.io/static/v1?label=Human+Trafficking+Analysis&message=Streamlit+App&color=blue&style=for-the-badge)](https://humantrafficking.streamlit.app)
+      
 
 ## Introduction
 This project presents a comprehensive streamlit app dashboard analyzing human trafficking trends globally and regionally, with a specific focus on the United States. The app leverages UNODC trafficking data to visualize key metrics, including victim demographics by gender and age, as well as prosecution and conviction rates. The primary objective is to provide insights into global and U.S. trafficking patterns, demographic distributions, and legal response effectiveness. By integrating interactive visuals, this project enables users to explore trafficking data across multiple dimensions, supporting a deeper understanding of regional and temporal trends in trafficking cases.
